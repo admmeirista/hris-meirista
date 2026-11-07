@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HRIS Meirista</title>
+<meta name="description" content="Presensi, jadwal kerja, dan pengajuan karyawan">
+<style>
+  :root{--navy:#1e3a8a;--ink:#0f172a;--muted:#64748b;--bg:#f6f7fb;--card:#fff;--border:#e5e7eb}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ink:#e2e8f0;--muted:#94a3b8;--bg:#0b1120;--card:#111827;--border:#1f2937}}
+  *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+  main{max-width:880px;margin:0 auto;padding:48px 16px}
+  h1{margin:0 0 8px;font-size:30px}p{color:var(--muted);line-height:1.6;margin:0}
+  .grid{display:grid;gap:16px;margin-top:32px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+  a.card{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;transition:border-color .15s}
+  a.card:hover,a.card:focus-visible{border-color:var(--navy);outline:none}
+  .badge{display:inline-block;background:var(--navy);color:#fff;font-size:12px;font-weight:600;border-radius:999px;padding:3px 10px;margin-bottom:12px}
+  h2{margin:0 0 6px;font-size:20px}.note{margin-top:32px;font-size:13px}
+</style>
+</head>
+<body>
+<main>
+  <h1>HRIS Meirista</h1>
+  <p>Presensi dengan geofence &amp; verifikasi wajah, jadwal shift, hari libur nasional, cuti &amp; izin dengan persetujuan bertingkat.</p>
+  <div class="grid">
+    <a class="card" href="app/"><span class="badge">Karyawan</span><h2>Aplikasi Karyawan</h2><p>Check-in/out, kalender kerja, riwayat presensi, dan pengajuan. Optimal di ponsel.</p></a>
+    <a class="card" href="admin/"><span class="badge">Admin</span><h2>Dashboard Admin</h2><p>Untuk Super Admin, HR Admin, dan Supervisor.</p></a>
+  </div>
+  <p class="note">Verifikasi wajah pada deployment ini berjalan dalam mode simulasi demo dan tidak melakukan pengenalan wajah sungguhan.</p>
+</main>
+</body>
+</html>
