@@ -1,0 +1,6 @@
+:HL["/hris-meirista/admin/_next/static/chunks/33m4gtkwnv5g0.css","style"]
+4:[["children",{"s":"__PAGE__","h":160}]]
+3:[["children",{"s":"karyawan","h":96,"c":"$Q4"}]]
+2:[["children",{"s":"pengaturan","h":96,"c":"$Q3"}]]
+1:[["children",{"s":"(app)","h":96,"c":"$Q2"}]]
+0:{"b":"YoGyRClNCScWJZ87pz0W4","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
