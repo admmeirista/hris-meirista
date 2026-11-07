@@ -150,11 +150,11 @@
       <form id="v-login" class="hidden" novalidate>
         <div class="eyebrow">Selamat datang</div>
         <h2 id="title">Masuk ke akun Anda</h2>
-        <p class="sub">Gunakan email dan kata sandi yang diberikan HR. Sistem otomatis membuka aplikasi sesuai peran dan perangkat Anda.</p>
+        <p class="sub">Gunakan email atau username dan kata sandi yang diberikan HR. Sistem otomatis membuka aplikasi sesuai peran dan perangkat Anda.</p>
         <div id="alert" class="alert" role="alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span id="alert-text"></span></div>
         <div class="field">
-          <label for="email">Email</label>
-          <input id="email" type="email" inputmode="email" autocomplete="username" placeholder="Masukkan email" required>
+          <label for="email">Email atau username</label>
+          <input id="email" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" placeholder="Masukkan email atau username" required>
         </div>
         <div class="field has-toggle">
           <label for="password">Kata sandi</label>
@@ -279,7 +279,7 @@
   $('v-login').addEventListener('submit', function (ev) {
     ev.preventDefault();
     var email = $('email').value.trim(), password = $('password').value, mfa = $('mfa').value.trim();
-    if (!email || !password) return alertMsg('Isi email dan kata sandi.');
+    if (!email || !password) return alertMsg('Isi email/username dan kata sandi.');
     alertMsg('');
     $('submit').disabled = true;
     $('submit-label').innerHTML = '<span class="spin" aria-hidden="true"></span>';
