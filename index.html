@@ -151,11 +151,11 @@
       <!-- Login -->
       <form id="v-login" class="hidden" novalidate>
         <div class="eyebrow">Selamat datang</div>
-        <h2 id="title">Masuk ke akun Anda</h2>
-        <p class="sub">Masuk dengan username dan kata sandi Anda. Sistem otomatis membuka aplikasi sesuai peran dan perangkat Anda.</p>
+        <h2 id="title">Masuk sebagai Admin</h2>
+        <p class="sub">Gunakan username dan kata sandi admin. Setelah masuk, dashboard admin langsung terbuka.</p>
         <div id="alert" class="alert" role="alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span id="alert-text"></span></div>
         <div class="field">
-          <label for="email">Email atau username</label>
+          <label for="email">Username admin</label>
           <input id="email" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" placeholder="Masukkan email atau username" required>
         </div>
         <div class="field has-toggle">
@@ -169,20 +169,11 @@
           <label for="mfa">Kode autentikator</label>
           <input id="mfa" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6 digit kode">
         </div>
-        <button class="btn" id="submit" type="submit"><span id="submit-label" style="display:inline-flex;align-items:center">Masuk</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+        <button class="btn" id="submit" type="submit"><span id="submit-label" style="display:inline-flex;align-items:center">Masuk ke Dashboard Admin</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
         <button type="button" class="link-btn hidden" id="install"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg><span id="install-label">Pasang aplikasi di perangkat ini</span></button>
-        <a class="btn-outline" href="app/login/">Karyawan? Masuk dengan ID &amp; PIN</a>
+        <a class="btn-outline" href="app/login/">Karyawan? Pilih profil &amp; verifikasi wajah</a>
         <a class="btn-outline" id="register" href="app/register/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>Karyawan baru? Daftar di sini</a>
       </form>
-
-      <!-- Role / device chooser -->
-      <div id="v-choose" class="hidden">
-        <div class="eyebrow">Akun terdeteksi</div>
-        <h2>Lanjutkan ke…</h2>
-        <div class="who"><div class="avatar" id="who-initial">?</div><div><b id="who-name"></b><span id="who-role"></span></div></div>
-        <div class="choices" id="choices"></div>
-        <button type="button" class="link-btn" id="other"><span>Bukan Anda? Masuk dengan akun lain</span></button>
-      </div>
 
       <p class="card-foot">Lupa kata sandi? Hubungi HR untuk reset akun.</p>
     </div>
@@ -208,7 +199,7 @@
   $('yr').textContent = new Date().getFullYear();
 
   function show(view) {
-    ['v-detect', 'v-login', 'v-choose'].forEach(function (v) { $(v).classList.toggle('hidden', v !== view); });
+    ['v-detect', 'v-login'].forEach(function (v) { $(v).classList.toggle('hidden', v !== view); });
     if (view === 'v-login') setTimeout(function () { ($('email').value ? $('password') : $('email')).focus(); }, 30);
   }
   function alertMsg(text, info) {
@@ -232,8 +223,9 @@
     var recentlyBounced = Date.now() - Number(session.get('hris.redirectAt') || 0) < 15000;
     var hasAdmin = !!store.get(KEYS.admin), hasApp = !!store.get(KEYS.app);
     if (!recentlyBounced && (hasAdmin || hasApp)) {
-      var last = store.get(KEYS.last);
-      var target = hasAdmin && hasApp ? (last === 'admin' || last === 'app' ? last : (isMobileDevice() ? 'app' : 'admin')) : hasAdmin ? 'admin' : 'app';
+      var adminRequested = new URLSearchParams(location.search).get('mode') === 'admin';
+      if (adminRequested && !hasAdmin) return show('v-login');
+      var target = hasAdmin ? 'admin' : 'app';
       $('detect-msg').textContent = target === 'admin' ? 'Membuka Dashboard Admin…' : 'Membuka Aplikasi Karyawan…';
       return go(target);
     }
@@ -279,7 +271,6 @@
   }
 
   // ── 3. Login, then route by role + device ──
-  var pending = null; // { user, refreshToken }
   $('v-login').addEventListener('submit', function (ev) {
     ev.preventDefault();
     var email = $('email').value.trim(), password = $('password').value, mfa = $('mfa').value.trim();
@@ -288,56 +279,22 @@
     $('submit').disabled = true;
     $('submit-label').innerHTML = '<span class="spin" aria-hidden="true"></span>';
     $('submit-label').setAttribute('aria-label', 'Memproses');
-    call('POST', '/auth/login', { email: email, password: password, client: 'mobile', deviceId: deviceId(), mfaCode: mfa || undefined })
+    call('POST', '/auth/login', { email: email, password: password, client: 'web', deviceId: deviceId(), mfaCode: mfa || undefined })
       .then(function (res) { route(res.user, res.refreshToken); })
       .catch(function (e) {
         if (e.code === 'MFA_REQUIRED') { $('mfa-field').classList.remove('hidden'); $('mfa').focus(); alertMsg('Masukkan kode 6 digit dari aplikasi autentikator.', true); }
         else alertMsg(e.message || 'Tidak dapat terhubung ke server.');
       })
-      .then(function () { $('submit').disabled = false; $('submit-label').textContent = 'Masuk'; });
+      .then(function () { $('submit').disabled = false; $('submit-label').textContent = 'Masuk ke Dashboard Admin'; });
   });
 
   function route(user, refreshToken) {
     var isAdmin = user.roles.some(function (r) { return ADMIN_ROLES.indexOf(r) >= 0; });
-    var isEmployee = !!user.employee;
-    // Each app gets its own refresh token; the other app's stale token is cleared.
-    var finish = function (target) {
-      store.set(target === 'admin' ? KEYS.admin : KEYS.app, refreshToken);
-      store.set(target === 'admin' ? KEYS.app : KEYS.admin, null);
-      go(target);
-    };
-    if (!isAdmin) return finish('app');
-    if (!isEmployee) return finish('admin');
-    pending = { user: user, finish: finish };
-    chooser(user);
+    if (!isAdmin) throw new Error('Akun ini bukan admin. Karyawan masuk melalui pilih profil dan verifikasi wajah.');
+    store.set(KEYS.admin, refreshToken);
+    store.set(KEYS.app, null);
+    go('admin');
   }
-
-  function chooser(user) {
-    var name = (user.employee && user.employee.fullName) || user.email;
-    var role = user.roles.filter(function (r) { return r !== 'EMPLOYEE'; }).map(function (r) { return ROLE_LABEL[r] || r; }).join(', ');
-    $('who-initial').textContent = name.split(/\s+/).map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase();
-    $('who-name').textContent = name;
-    $('who-role').textContent = role + (user.employee && user.employee.department ? ' · ' + user.employee.department : '');
-    var rec = isMobileDevice() ? 'app' : 'admin';
-    var opts = [
-      { id: 'admin', title: 'Dashboard Admin', desc: 'Kelola karyawan, presensi, jadwal, dan persetujuan.', icon: '<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>' },
-      { id: 'app', title: 'Aplikasi Karyawan', desc: 'Presensi, kalender kerja, dan pengajuan pribadi Anda.', icon: '<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/>' }
-    ];
-    if (rec === 'app') opts.reverse();
-    $('choices').innerHTML = '';
-    opts.forEach(function (o) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'choice' + (o.id === rec ? ' rec' : '');
-      b.innerHTML = '<div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + o.icon + '</svg></div><div><b>' + o.title + '</b><span>' + o.desc + '</span>' + (o.id === rec ? '<span class="tag">Disarankan untuk perangkat ini</span>' : '') + '</div>';
-      b.addEventListener('click', function () { pending.finish(o.id); });
-      $('choices').appendChild(b);
-    });
-    show('v-choose');
-    $('choices').firstChild.focus();
-  }
-
-  $('other').addEventListener('click', function () { pending = null; $('password').value = ''; show('v-login'); });
   $('toggle').addEventListener('click', function () {
     var p = $('password'), on = p.type === 'password';
     p.type = on ? 'text' : 'password';
